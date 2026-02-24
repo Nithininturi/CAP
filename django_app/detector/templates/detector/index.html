@@ -1,0 +1,88 @@
+{% extends "detector/base.html" %}
+{% load static %}
+
+{% block title %}ELA Guard — Image Tamper Detection{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <div class="hero-text">
+    <h1 class="hero-title">
+      Detect Image Tampering<br/>
+      <span class="gradient-text">with AI Precision</span>
+    </h1>
+    <p class="hero-subtitle">
+      Upload any image. Our hybrid SVM + CNN ensemble with Error Level Analysis
+      detects manipulations in seconds.
+    </p>
+    <div class="badge-row">
+      <span class="badge badge-blue">ELA Analysis</span>
+      <span class="badge badge-purple">SVM + CNN</span>
+      <span class="badge badge-green">Ensemble Fusion</span>
+    </div>
+  </div>
+
+  <div class="upload-card">
+    {% if error %}
+    <div class="alert alert-error">
+      <span class="alert-icon">⚠</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <form id="upload-form" method="POST" action="{% url 'analyze' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.webp,.gif,.heic" hidden />
+        <div class="drop-zone-inner" id="drop-inner">
+          <div class="upload-icon">📤</div>
+          <p class="drop-title">Drag &amp; drop your image here</p>
+          <p class="drop-subtitle">or click to browse</p>
+          <p class="drop-formats">PNG · JPG · JPEG · WebP · GIF · HEIC &nbsp;·&nbsp; Max 10MB</p>
+        </div>
+        <div class="preview-wrap hidden" id="preview-wrap">
+          <img id="preview-img" src="" alt="Preview" />
+          <div class="preview-info">
+            <p id="preview-name" class="preview-filename"></p>
+            <p id="preview-size" class="preview-size"></p>
+            <button type="button" class="btn-ghost" id="clear-btn">✕ Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-analyze" id="analyze-btn" disabled>
+        <span class="btn-text">🔍 Analyze Image</span>
+        <span class="btn-spinner hidden" id="spinner">
+          <span class="spinner"></span> Analyzing…
+        </span>
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if recent %}
+<section class="recent-section">
+  <h2 class="section-title">Recent Analyses</h2>
+  <div class="recent-grid">
+    {% for r in recent %}
+    <a href="{% url 'result' r.pk %}" class="recent-card {% if r.prediction == 'Tampered' %}card-tampered{% else %}card-authentic{% endif %}">
+      <div class="recent-thumb">
+        {% if r.original_image %}
+          <img src="{{ r.original_image.url }}" alt="{{ r.original_filename }}" loading="lazy" />
+        {% endif %}
+      </div>
+      <div class="recent-info">
+        <p class="recent-filename">{{ r.original_filename|truncatechars:25 }}</p>
+        <span class="verdict-badge {% if r.prediction == 'Tampered' %}badge-red{% else %}badge-green{% endif %}">
+          {{ r.prediction }}
+        </span>
+        <p class="recent-score">{{ r.tamper_score_pct }}% tamper score</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <div class="center-link">
+    <a href="{% url 'history' %}" class="btn-outline">View Full History →</a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

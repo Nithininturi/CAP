@@ -1,0 +1,6 @@
+2026-02-24 13:51:08,675 [INFO] Training on: cpu
+2026-02-24 13:51:08,675 [INFO] Loading CASIA v2 dataset...
+2026-02-24 13:51:09,333 [INFO] Authentic images: 14874
+2026-02-24 13:51:09,334 [INFO] Tampered  images: 7187
+2026-02-24 13:51:09,370 [INFO] Train: 15442 | Val: 3309 | Test: 3310
+2026-02-24 13:51:09,524 [INFO] Model parameters: 5,878,594

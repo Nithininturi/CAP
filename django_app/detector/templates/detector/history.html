@@ -1,0 +1,65 @@
+{% extends "detector/base.html" %}
+{% load static %}
+
+{% block title %}Analysis History — ELA Guard{% endblock %}
+
+{% block content %}
+<div class="history-page">
+  <div class="page-header">
+    <h1 class="page-title">Analysis History</h1>
+    <p class="page-subtitle">{{ records.count }} analyses performed</p>
+  </div>
+
+  {% if records %}
+  <div class="history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Filename</th>
+          <th>Verdict</th>
+          <th>Tamper Score</th>
+          <th>CNN</th>
+          <th>SVM</th>
+          <th>Analyzed</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr class="{% if r.prediction == 'Tampered' %}row-tampered{% else %}row-authentic{% endif %}">
+          <td class="td-thumb">
+            {% if r.original_image %}
+              <img src="{{ r.original_image.url }}" alt="" class="history-thumb" />
+            {% endif %}
+          </td>
+          <td class="td-filename">{{ r.original_filename|truncatechars:30 }}</td>
+          <td>
+            <span class="verdict-badge {% if r.prediction == 'Tampered' %}badge-red{% else %}badge-green{% endif %}">
+              {{ r.prediction }}
+            </span>
+          </td>
+          <td>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar {% if r.prediction == 'Tampered' %}bar-red{% else %}bar-green{% endif %}"
+                   style="width: {{ r.tamper_score_pct }}%"></div>
+            </div>
+            <span class="score-text">{{ r.tamper_score_pct }}%</span>
+          </td>
+          <td class="mono">{{ r.cnn_prob|floatformat:3 }}</td>
+          <td class="mono">{{ r.svm_prob|floatformat:3 }}</td>
+          <td>{{ r.analyzed_at|date:"M j, Y g:i A" }}</td>
+          <td><a href="{% url 'result' r.pk %}" class="link-view">View →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-icon">📂</p>
+    <p>No analyses yet. <a href="{% url 'index' %}">Upload an image</a> to get started.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

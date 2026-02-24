@@ -1,0 +1,135 @@
+{% extends "detector/base.html" %}
+{% load static %}
+
+{% block title %}Analysis Result — {{ record.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="result-page">
+  <div class="result-header">
+    <a href="{% url 'index' %}" class="back-link">← Analyze Another</a>
+    <h1 class="result-title">Analysis Result</h1>
+    <p class="result-filename">{{ record.original_filename }}</p>
+  </div>
+
+  <!-- Verdict Banner -->
+  <div class="verdict-banner {% if record.prediction == 'Tampered' %}verdict-tampered{% else %}verdict-authentic{% endif %}">
+    <div class="verdict-icon">
+      {% if record.prediction == 'Tampered' %}⚠️{% else %}✅{% endif %}
+    </div>
+    <div class="verdict-text">
+      <h2>{{ record.prediction }}</h2>
+      <p>
+        {% if record.prediction == 'Tampered' %}
+          This image shows signs of digital manipulation or forgery.
+        {% else %}
+          No tampering detected. This image appears to be authentic.
+        {% endif %}
+      </p>
+    </div>
+    <div class="verdict-score-big">
+      <span class="score-number">{{ record.tamper_score_pct }}<small>%</small></span>
+      <span class="score-label">Tamper Score</span>
+    </div>
+  </div>
+
+  <!-- Image Comparison -->
+  <div class="image-comparison">
+    <div class="img-panel">
+      <h3 class="panel-title">📷 Original Image</h3>
+      <div class="img-frame">
+        <img src="{{ record.original_image.url }}" alt="Original" />
+      </div>
+    </div>
+    <div class="comparison-arrow">→</div>
+    <div class="img-panel">
+      <h3 class="panel-title">🔬 ELA Map</h3>
+      <div class="img-frame ela-frame">
+        {% if record.ela_image %}
+          <img src="{{ record.ela_image.url }}" alt="ELA Map" />
+        {% else %}
+          <div class="no-ela">ELA image unavailable</div>
+        {% endif %}
+      </div>
+      <p class="ela-hint">Brighter areas = higher error levels = potential tampering</p>
+    </div>
+  </div>
+
+  <!-- Score Breakdown -->
+  <div class="score-breakdown">
+    <h2 class="section-title">Score Breakdown</h2>
+    <div class="score-cards">
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <span class="model-name">🔮 Ensemble Score</span>
+          <span class="model-weight">0.8×CNN + 0.2×SVM</span>
+        </div>
+        <div class="score-value">{{ record.tamper_score_pct }}%</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar {% if record.prediction == 'Tampered' %}bar-red{% else %}bar-green{% endif %}"
+               style="width: {{ record.tamper_score_pct }}%"></div>
+        </div>
+        <div class="threshold-label">Threshold: 50%</div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <span class="model-name">🧠 CNN Model</span>
+          <span class="model-weight">Weight: 80%</span>
+        </div>
+        <div class="score-value">{{ record.cnn_prob|floatformat:1 }}%</div>
+        {% with cnn_pct=record.cnn_prob|floatformat:1 %}
+        <div class="progress-bar-wrap">
+          <div class="progress-bar bar-blue" style="width: {{ record.cnn_prob }}%;"></div>
+        </div>
+        {% endwith %}
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <span class="model-name">📊 SVM Model</span>
+          <span class="model-weight">Weight: 20%</span>
+        </div>
+        <div class="score-value">{{ record.svm_prob|floatformat:1 }}%</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar bar-purple" style="width: {{ record.svm_prob }}%;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="meta-section">
+    <h2 class="section-title">Analysis Details</h2>
+    <table class="meta-table">
+      <tr><td>File Name</td><td>{{ record.original_filename }}</td></tr>
+      <tr><td>Analyzed At</td><td>{{ record.analyzed_at|date:"F j, Y, g:i A" }}</td></tr>
+      <tr><td>Final Label</td><td><strong>{{ record.prediction }}</strong></td></tr>
+      <tr><td>Tamper Score</td><td>{{ record.tamper_score_pct }}%</td></tr>
+      <tr><td>CNN Probability</td><td>{{ record.cnn_prob|floatformat:4 }}</td></tr>
+      <tr><td>SVM Probability</td><td>{{ record.svm_prob|floatformat:4 }}</td></tr>
+      <tr><td>Fusion Formula</td><td>0.8 × CNN + 0.2 × SVM</td></tr>
+      <tr><td>Decision Threshold</td><td>≥ 0.50 → Tampered</td></tr>
+    </table>
+  </div>
+
+  <div class="result-actions">
+    <a href="{% url 'index' %}" class="btn-analyze">🔍 Analyze Another Image</a>
+    <a href="{% url 'history' %}" class="btn-outline">📋 View History</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Animate confidence bars on load
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".progress-bar").forEach(bar => {
+      const target = bar.style.width;
+      bar.style.width = "0%";
+      setTimeout(() => { bar.style.width = target; }, 300);
+    });
+  });
+</script>
+{% endblock %}
