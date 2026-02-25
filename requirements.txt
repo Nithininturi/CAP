@@ -19,3 +19,6 @@ Pillow>=10.0.0   # needed for ImageField
 
 # ─── Utilities ──────────────────────────────────────────────
 tqdm>=4.65.0
+
+gunicorn>=21.2.0
+
